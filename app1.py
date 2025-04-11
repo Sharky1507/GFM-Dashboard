@@ -18,27 +18,25 @@ def load_and_clean_data(file_path):
     else:
         df = pd.read_csv(file_path)
     
-    # Rename columns to match expected format
     column_mapping = {
         'Group Name': 'FranchiseGroup',
-        'Group Type': 'GroupType',  # New column
+        'Group Type': 'GroupType',  
         'Country': 'Country',
         'Brand Name': 'Brand',
         'Brand Product Category': 'ProductType',
-        'Brand country of Origin': 'BrandOrigin'  # New column
+        'Brand country of Origin': 'BrandOrigin'  
     }
     
-    # Rename columns
     df = df.rename(columns=column_mapping)
     
     # Data validation
     df = df.drop_duplicates()
     df = df.dropna(subset=['Brand', 'FranchiseGroup', 'Country'])
     
-    # Standardize categories
+    # Upper-case and lower-casing columns
     if 'ProductType' in df.columns:
         df['ProductType'] = df['ProductType'].str.title()
-    df['Country'] = df['Country'].str.upper()
+    df['Country'] = df['Country'].str.upper() 
     
     return df
 
@@ -49,9 +47,7 @@ def setup_database(db_name='franchise.db'):
     """Set up SQLite database with proper schema"""
     engine = create_engine(f'sqlite:///{db_name}')
     
-    # Create tables if not exists with modified schema to match the Excel file
     with engine.connect() as conn:
-        # Use text() to make the SQL string executable
         sql = text("""
             CREATE TABLE IF NOT EXISTS brands (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,13 +60,13 @@ def setup_database(db_name='franchise.db'):
             );
         """)
         conn.execute(sql)
-        conn.commit()  # Commit the transaction
+        conn.commit()  
         
     return engine
-
+#load
 def update_database(engine, df):
     """Update database with cleaned data"""
-    # Map DataFrame columns to database columns
+    # lowercasing and removing space to avoid SQL errer
     column_mapping = {
         'Brand': 'brand_name',
         'FranchiseGroup': 'franchise_group',
@@ -80,33 +76,27 @@ def update_database(engine, df):
         'BrandOrigin': 'brand_origin'
     }
     
-    # Create a new DataFrame with only the columns we need
     df_db = pd.DataFrame()
     
-    # Add each column we need, if it exists
     for src_col, db_col in column_mapping.items():
         if src_col in df.columns:
             df_db[db_col] = df[src_col]
         else:
-            # If column doesn't exist, add empty column
-            df_db[db_col] = None
-    
-    # Save to database
+            df_db[db_col] = None # for error handling
+    #  
     df_db.to_sql('brands', engine, if_exists='replace', index=False)
 
 # ----------------------
-# 3. Dashboard Module
+# 3. Dashboard 
 # ----------------------
 def create_dashboard(engine):
     """Create interactive Dash dashboard"""
-    app = dash.Dash(__name__, suppress_callback_exceptions=True)
+    app = dash.Dash(__name__, suppress_callback_exceptions=True) # entry point
     
-    # Get initial data safely
     try:
-        # Check which columns exist in the database
         db_columns = pd.read_sql("PRAGMA table_info(brands);", engine)['name'].tolist()
         
-        # Check if columns exist for features
+        # Ensuring columns exist to avoid unexpectd crashes
         has_country = 'country' in db_columns
         has_product_type = 'product_type' in db_columns
         has_brand_origin = 'brand_origin' in db_columns
@@ -211,7 +201,7 @@ def create_dashboard(engine):
                                 sort_action='native',
                                 page_size=10
                             ),
-                            # Export button - Enhancement 2
+                            # Export button 
                             html.Div([
                                 html.Button("Export Data to CSV", id="btn-export-csv", 
                                         style={'marginTop': '20px', 'backgroundColor': '#007bff', 'color': 'white', 
@@ -220,7 +210,7 @@ def create_dashboard(engine):
                             ], style={'marginTop': '15px', 'textAlign': 'right'})
                         ]),
                         
-                        # Global Map Tab - Enhancement 1
+                        # Global Map Tab 
                         dcc.Tab(label='Global Map', children=[
                             html.Div([
                                 html.H4("Global Brand Distribution", style={'textAlign': 'center'}),
@@ -250,7 +240,7 @@ def create_dashboard(engine):
                             ]) if has_brand_origin and origin_options else html.Div()
                         ]),
                         
-                        # Network View Tab - Enhancement 3
+                        # Network View Tab
                         dcc.Tab(label='Network View', children=[
                             html.Div([
                                 html.H4("Brand-Franchise Group Network", style={'textAlign': 'center'}),
@@ -258,7 +248,7 @@ def create_dashboard(engine):
                             ], style={'padding': '20px'})
                         ]),
                         
-                        # Analytics Tab - Enhancement 4
+                        # Analytics Tab
                         dcc.Tab(label='Analytics', children=[
                             html.Div([
                                 html.H4("Brand Distribution Analytics", style={'textAlign': 'center'}),
@@ -355,7 +345,7 @@ def create_dashboard(engine):
         query = "SELECT * FROM brands"
         conditions = []
         
-        # Build query conditions
+        # Build query conditions (smarter queriey handling using python)
         if search_term:
             conditions.append(f"brand_name LIKE '%{search_term}%'")
         if selected_countries:
@@ -748,10 +738,8 @@ if __name__ == '__main__':
         except ImportError:
             print("Warning: Could not install networkx. Network visualization will be limited.")
     
-    # Point to your GFM dataset - update with the correct path if needed
     data_file = 'GFM Dataset (1).xlsx'
     
-    # Check if data file exists in current directory, if not check in downloads folder
     if not os.path.exists(data_file):
         downloads_path = os.path.join(os.path.expanduser('~'), 'Downloads', data_file)
         if os.path.exists(downloads_path):
@@ -766,8 +754,7 @@ if __name__ == '__main__':
                 exit(1)
     
     print(f"Loading data from: {data_file}")
-    
-    # Make sure pandas has openpyxl for Excel reading
+    #error handling
     try:
         import openpyxl
     except ImportError:
@@ -775,20 +762,15 @@ if __name__ == '__main__':
         import subprocess
         subprocess.call(['pip', 'install', 'openpyxl'])
     
-    # 1. Load and clean data
     print("Loading and cleaning data...")
     df = load_and_clean_data(data_file)
     
-    # 2. Setup database
     print("Setting up database...")
     engine = setup_database()
     update_database(engine, df)
     
-    # 3. Start dashboard
     print("Starting dashboard at http://127.0.0.1:8050/")
     app = create_dashboard(engine)
     
-    # Use try/except to handle different versions of Dash
     
-        # Fallback to app.run if run_server is truly deprecated in your version
     app.run(debug=True, port=8050)
