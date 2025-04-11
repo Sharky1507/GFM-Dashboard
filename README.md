@@ -5,7 +5,7 @@ Built using Python, Dash, and SQL
 
 ## 🚀 Overview
 
-An interactive dashboard visualizing franchise brand distribution across the globe. Explore global market presence and brand relationships with dynamic filters and rich visualizations.
+An interactive dashboard visualizing franchise brand distribution across the globe. Helps in exploring global market presence and brand relationships with dynamic filters and rich visualizations.
 
 ## 🔧 Features
 
@@ -31,7 +31,6 @@ Expected fields:
 - `Group Type` *(optional)*
 - `Brand Origin` *(optional)*
 
-> ℹ️ If "Brand Origin" is missing, ensure your file has a **"Brand country of Origin"** column.
 
 ## 💻 Requirements
 
