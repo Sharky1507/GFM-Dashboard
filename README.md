@@ -20,17 +20,6 @@ An interactive dashboard visualizing franchise brand distribution across the glo
   - Treemaps & Distribution Matrices  
 - **Export Filtered Data** for external analysis
 
-## 🗃️ Data Structure
-
-Expected fields:
-
-- `Brand Name`
-- `Franchise Group`
-- `Country`
-- `Product Type` *(optional)*
-- `Group Type` *(optional)*
-- `Brand Origin` *(optional)*
-
 
 ## 💻 Requirements
 
