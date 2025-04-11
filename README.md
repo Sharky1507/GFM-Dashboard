@@ -34,3 +34,6 @@ An interactive dashboard visualizing franchise brand distribution across the glo
 3. Run the app:
    ```bash
    python app1.py
+
+## Demo
+https://drive.google.com/drive/folders/17YLsm5q3oLayQUTIKg9VZfn6EfjJIw3b
